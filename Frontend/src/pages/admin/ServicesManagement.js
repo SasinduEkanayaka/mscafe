@@ -391,7 +391,7 @@ const ServicesManagement = () => {
     try {
       setLoading(true);
       // Include inactive services for admin view
-      const response = await servicesAPI.getAll({ includeInactive: 'true' });
+      const response = await servicesAPI.getAll({ includeInactive: 'true', limit: 1000 }); // Get all services
       
       if (response.data && response.data.success) {
         const servicesData = response.data.data || [];

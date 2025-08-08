@@ -192,12 +192,11 @@ const BuyService = () => {
                   <h1 className="text-3xl font-bold text-secondary-900 dark:text-white mb-4">
                     {service.name}
                   </h1>
-                  <p className="text-lg text-secondary-600 dark:text-secondary-400 leading-relaxed mb-4">
-                    {service.shortDescription || service.short_description}
-                  </p>
-                  <p className="text-secondary-600 dark:text-secondary-400 leading-relaxed">
-                    {service.description}
-                  </p>
+                  {(service.shortDescription || service.short_description) && (
+                    <p className="text-lg text-secondary-600 dark:text-secondary-400 leading-relaxed">
+                      {service.shortDescription || service.short_description}
+                    </p>
+                  )}
                 </div>
               </div>
 

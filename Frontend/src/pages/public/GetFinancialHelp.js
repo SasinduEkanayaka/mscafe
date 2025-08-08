@@ -38,7 +38,7 @@ const GetFinancialHelp = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await servicesAPI.getAll();
+      const response = await servicesAPI.getAll({ limit: 1000 }); // Get all services
       setServices(response.data.data || []);
     } catch (error) {
       console.error('Failed to fetch services:', error);
@@ -375,21 +375,13 @@ const GetFinancialHelp = () => {
                         </div>
                       </div>
 
-                      <p className="text-gray-700 dark:text-gray-200 mb-8 leading-relaxed text-base font-light">
-                        {selectedService.description}
+                      <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed text-sm">
+                        {selectedService.name === "Tax Preparation" && "Professional tax filing services to maximize your refunds and ensure compliance."}
+                        {selectedService.name === "Credit Repair" && "Expert credit restoration to improve your financial standing and opportunities."}
+                        {selectedService.name === "Business Consulting" && "Strategic business guidance to grow and optimize your operations."}
+                        {selectedService.name === "Financial Planning" && "Comprehensive financial strategies for your long-term wealth building."}
+                        {!["Tax Preparation", "Credit Repair", "Business Consulting", "Financial Planning"].includes(selectedService.name) && "Professional financial services tailored to your specific needs."}
                       </p>
-
-                      {selectedService.requirements && (
-                        <div className="mb-8 p-5 bg-gradient-to-r from-[#f4b342]/20 to-orange-100 dark:from-orange-950 dark:to-orange-950 dark:bg-opacity-20 rounded-xl border border-orange-200 dark:border-orange-900">
-                          <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center">
-                            <CheckCircleIcon className="w-5 h-5 mr-2 text-[#f4b342]" />
-                            Requirements
-                          </h4>
-                          <div className="text-gray-700 dark:text-gray-200 leading-relaxed text-sm">
-                            {selectedService.requirements}
-                          </div>
-                        </div>
-                      )}
 
                       <div className="flex flex-col space-y-3">
                         <Link

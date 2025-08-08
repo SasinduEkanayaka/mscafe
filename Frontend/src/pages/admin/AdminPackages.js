@@ -505,7 +505,7 @@ const AdminPackages = () => {
     try {
       setLoading(true);
       // Include inactive packages for admin view
-      const response = await coursesAPI.getAll({ includeInactive: 'true' });
+      const response = await coursesAPI.getAll({ includeInactive: 'true', limit: 1000 }); // Get all courses
       console.log('Fetched packages response:', response.data);
       
       if (response.data && response.data.success) {

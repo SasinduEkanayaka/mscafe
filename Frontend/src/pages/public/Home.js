@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { servicesAPI, coursesAPI } from "../../services/api";
 import homeImage from "../../images/home.jpg";
@@ -19,8 +20,8 @@ const Home = () => {
         setError(null);
 
         const [servicesRes, coursesRes] = await Promise.all([
-          servicesAPI.getAll(),
-          coursesAPI.getAll(),
+          servicesAPI.getAll({ limit: 1000 }), // Get all services
+          coursesAPI.getAll({ limit: 1000 }), // Get all courses
         ]);
 
         console.log('Courses response:', coursesRes.data);
@@ -846,100 +847,126 @@ const Home = () => {
           </motion.div>
           
           {!loading && services.length > 0 && (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            >
-              {services.map((service, index) => {
-                const imageUrl = getImageUrl(service);
-                const hasImageError = imageErrors[service.id];
-                const shouldShowImage = imageUrl && !hasImageError;
-                const serviceType = service.service_type || service.serviceType;
-                
-                return (
-                  <motion.div
-                    key={service.id}
-                    variants={cardVariants}
-                    className="group relative"
+            <>
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              >
+                {services.slice(0, 6).map((service, index) => {
+                  const imageUrl = getImageUrl(service);
+                  const hasImageError = imageErrors[service.id];
+                  const shouldShowImage = imageUrl && !hasImageError;
+                  const serviceType = service.service_type || service.serviceType;
+                  
+                  return (
+                    <motion.div
+                      key={service.id}
+                      variants={cardVariants}
+                      className="group relative"
+                    >
+                      <div className="relative h-full bg-white rounded-2xl shadow-lg border border-gray-100 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden">
+                        {/* Image or Icon Header */}
+                        <div className="relative h-48 overflow-hidden">
+                          {shouldShowImage ? (
+                            <img
+                              src={imageUrl}
+                              alt={service.name}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              onError={() => handleImageError(service.id)}
+                            />
+                          ) : (
+                            <div className={`w-full h-full bg-gradient-to-br ${getServiceColor(serviceType)} flex items-center justify-center`}>
+                              {getServiceIcon(serviceType)}
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                          
+                          {/* Service Number Badge */}
+                          <div className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
+                            <span className="text-[#93268f] font-bold text-sm">{index + 1}</span>
+                          </div>
+                          
+                          {/* Price Badge if available */}
+                          {service.price && (
+                            <div className="absolute bottom-4 left-4 bg-[#f4b342] text-white px-3 py-1 rounded-lg font-semibold text-sm shadow-lg">
+                              ${service.price}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Card Content */}
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#93268f] transition-colors">
+                            {service.name}
+                          </h3>
+                          <p className="text-gray-600 leading-relaxed mb-4 line-clamp-3">
+                            {service.shortDescription || service.description}
+                          </p>
+                          
+                          {/* Service Features */}
+                          <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                            {service.durationMinutes && (
+                              <div className="flex items-center gap-1">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span>{service.durationMinutes} min</span>
+                              </div>
+                            )}
+                            {service.featured && (
+                              <div className="flex items-center gap-1 text-[#f4b342]">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span>Featured</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Action Button */}
+                          <a
+                            href={`/buy-service/${service.id}`}
+                            className="block w-full bg-gradient-to-r from-[#93268f] to-purple-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/30 group-hover:scale-105 text-center"
+                          >
+                            Learn More
+                          </a>
+                        </div>
+                        
+                        {/* Hover Effect Overlay */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#93268f] to-[#f4b342] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+              
+              {/* See More Button for Services */}
+              {services.length > 6 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                  className="text-center mt-12"
+                >
+                  <Link
+                    to="/financial-help"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#93268f] to-purple-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/30 hover:scale-105 group"
                   >
-                    <div className="relative h-full bg-white rounded-2xl shadow-lg border border-gray-100 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden">
-                      {/* Image or Icon Header */}
-                      <div className="relative h-48 overflow-hidden">
-                        {shouldShowImage ? (
-                          <img
-                            src={imageUrl}
-                            alt={service.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            onError={() => handleImageError(service.id)}
-                          />
-                        ) : (
-                          <div className={`w-full h-full bg-gradient-to-br ${getServiceColor(serviceType)} flex items-center justify-center`}>
-                            {getServiceIcon(serviceType)}
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        
-                        {/* Service Number Badge */}
-                        <div className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
-                          <span className="text-[#93268f] font-bold text-sm">{index + 1}</span>
-                        </div>
-                        
-                        {/* Price Badge if available */}
-                        {service.price && (
-                          <div className="absolute bottom-4 left-4 bg-[#f4b342] text-white px-3 py-1 rounded-lg font-semibold text-sm shadow-lg">
-                            ${service.price}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Card Content */}
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#93268f] transition-colors">
-                          {service.name}
-                        </h3>
-                        <p className="text-gray-600 leading-relaxed mb-4 line-clamp-3">
-                          {service.shortDescription || service.description}
-                        </p>
-                        
-                        {/* Service Features */}
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                          {service.durationMinutes && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <span>{service.durationMinutes} min</span>
-                            </div>
-                          )}
-                          {service.featured && (
-                            <div className="flex items-center gap-1 text-[#f4b342]">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                              <span>Featured</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Action Button */}
-                        <a
-                          href={`/buy-service/${service.id}`}
-                          className="block w-full bg-gradient-to-r from-[#93268f] to-purple-700 text-white py-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/30 group-hover:scale-105 text-center"
-                        >
-                          Learn More
-                        </a>
-                      </div>
-                      
-                      {/* Hover Effect Overlay */}
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#93268f] to-[#f4b342] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+                    <span>See More Services</span>
+                    <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                    <span className="ml-2 bg-white/20 px-2 py-1 rounded-full text-sm">
+                      +{services.length - 6} more
+                    </span>
+                  </Link>
+                </motion.div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -977,121 +1004,147 @@ const Home = () => {
           </motion.div>
           
           {!loading && courses.length > 0 && (
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            >
-              {courses.map((course, index) => {
-                const imageUrl = getImageUrl(course);
-                const hasImageError = imageErrors[course.id];
-                const shouldShowImage = imageUrl && !hasImageError;
-                
-                return (
-                  <motion.div
-                    key={course.id}
-                    variants={cardVariants}
-                    className="group relative"
-                  >
-                    <div className="relative h-full bg-white rounded-2xl shadow-lg border border-gray-100 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden">
-                      {/* Image or Icon Header */}
-                      <div className="relative h-48 overflow-hidden">
-                        {shouldShowImage ? (
-                          <img
-                            src={imageUrl}
-                            alt={course.title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                            onError={() => handleImageError(course.id)}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-[#f4b342] via-orange-600 to-amber-700 flex items-center justify-center">
-                            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                        
-                        {/* Course Number Badge */}
-                        <div className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
-                          <span className="text-[#f4b342] font-bold text-sm">{index + 1}</span>
-                        </div>
-                        
-                        {/* Price Badge if available */}
-                        {course.price && (
-                          <div className="absolute bottom-4 left-4 bg-[#93268f] text-white px-3 py-1 rounded-lg font-semibold text-sm shadow-lg">
-                            {course.price}
-                          </div>
-                        )}
-                        
-                        {/* Duration Badge if available */}
-                        {course.duration_hours && (
-                          <div className="absolute bottom-4 right-4 bg-black/70 text-white px-2 py-1 rounded-lg text-xs font-medium">
-                            {course.duration_hours}h
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Card Content */}
-                      <div className="p-6">
-                        <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#f4b342] transition-colors">
-                          {course.title}
-                        </h3>
-                        <p className="text-gray-600 leading-relaxed mb-4 line-clamp-3">
-                          {course.short_description || course.description}
-                        </p>
-                        
-                        {/* Course Features */}
-                        <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                          <div className="flex items-center gap-4">
-                            {course.duration_hours && (
-                              <div className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span>{course.duration_hours} hours</span>
-                              </div>
-                            )}
-                            {course.level && (
-                              <div className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                                <span className="capitalize">{course.level}</span>
-                              </div>
-                            )}
+            <>
+              <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              >
+                {courses.slice(0, 6).map((course, index) => {
+                  const imageUrl = getImageUrl(course);
+                  const hasImageError = imageErrors[course.id];
+                  const shouldShowImage = imageUrl && !hasImageError;
+                  
+                  return (
+                    <motion.div
+                      key={course.id}
+                      variants={cardVariants}
+                      className="group relative"
+                    >
+                      <div className="relative h-full bg-white rounded-2xl shadow-lg border border-gray-100 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 overflow-hidden">
+                        {/* Image or Icon Header */}
+                        <div className="relative h-48 overflow-hidden">
+                          {shouldShowImage ? (
+                            <img
+                              src={imageUrl}
+                              alt={course.title}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                              onError={() => handleImageError(course.id)}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-[#f4b342] via-orange-600 to-amber-700 flex items-center justify-center">
+                              <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                              </svg>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                          
+                          {/* Course Number Badge */}
+                          <div className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
+                            <span className="text-[#f4b342] font-bold text-sm">{index + 1}</span>
                           </div>
                           
-                          {course.is_featured && (
-                            <div className="flex items-center gap-1 text-[#f4b342]">
-                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                              </svg>
-                              <span>Featured</span>
+                          {/* Price Badge if available */}
+                          {course.price && (
+                            <div className="absolute bottom-4 left-4 bg-[#93268f] text-white px-3 py-1 rounded-lg font-semibold text-sm shadow-lg">
+                              {course.price}
+                            </div>
+                          )}
+                          
+                          {/* Duration Badge if available */}
+                          {course.duration_hours && (
+                            <div className="absolute bottom-4 right-4 bg-black/70 text-white px-2 py-1 rounded-lg text-xs font-medium">
+                              {course.duration_hours}h
                             </div>
                           )}
                         </div>
                         
-                        {/* Action Button */}
-                        <div className="flex justify-center">
-                          <a
-                            href={`/buy-course/${course.id}`}
-                            className="block w-full bg-gradient-to-r from-[#f4b342] to-orange-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/30 group-hover:scale-105 text-center"
-                          >
-                            Enroll Now
-                          </a>
+                        {/* Card Content */}
+                        <div className="p-6">
+                          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#f4b342] transition-colors">
+                            {course.title}
+                          </h3>
+                          <p className="text-gray-600 leading-relaxed mb-4 line-clamp-3">
+                            {course.short_description || course.description}
+                          </p>
+                          
+                          {/* Course Features */}
+                          <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
+                            <div className="flex items-center gap-4">
+                              {course.duration_hours && (
+                                <div className="flex items-center gap-1">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <span>{course.duration_hours} hours</span>
+                                </div>
+                              )}
+                              {course.level && (
+                                <div className="flex items-center gap-1">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                  </svg>
+                                  <span className="capitalize">{course.level}</span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {course.is_featured && (
+                              <div className="flex items-center gap-1 text-[#f4b342]">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                <span>Featured</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Action Button */}
+                          <div className="flex justify-center">
+                            <a
+                              href={`/buy-course/${course.id}`}
+                              className="block w-full bg-gradient-to-r from-[#f4b342] to-orange-600 text-white py-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/30 group-hover:scale-105 text-center"
+                            >
+                              Enroll Now
+                            </a>
+                          </div>
                         </div>
+                        
+                        {/* Hover Effect Overlay */}
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#f4b342] to-[#93268f] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
                       </div>
-                      
-                      {/* Hover Effect Overlay */}
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#f4b342] to-[#93268f] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left" />
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+              
+              {/* See More Button for Courses */}
+              {courses.length > 6 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.3 }}
+                  className="text-center mt-12"
+                >
+                  <Link
+                    to="/tax-professional"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-[#f4b342] to-orange-600 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/30 hover:scale-105 group"
+                  >
+                    <span>See More Courses</span>
+                    <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                    <span className="ml-2 bg-white/20 px-2 py-1 rounded-full text-sm">
+                      +{courses.length - 6} more
+                    </span>
+                  </Link>
+                </motion.div>
+              )}
+            </>
           )}
         </div>
       </section>

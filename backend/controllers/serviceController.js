@@ -26,14 +26,21 @@ const getServices = asyncHandler(async (req, res) => {
     ];
   }
 
-  const offset = (page - 1) * limit;
+  const parsedLimit = parseInt(limit);
+  const offset = (page - 1) * parsedLimit;
 
-  const { count, rows: services } = await Service.findAndCountAll({
+  // If limit is very high (like 1000), remove pagination to get all records
+  const queryOptions = {
     where,
-    order: [['featured', 'DESC'], ['created_at', 'DESC']],
-    limit: parseInt(limit),
-    offset: parseInt(offset)
-  });
+    order: [['featured', 'DESC'], ['created_at', 'DESC']]
+  };
+
+  if (parsedLimit < 1000) {
+    queryOptions.limit = parsedLimit;
+    queryOptions.offset = offset;
+  }
+
+  const { count, rows: services } = await Service.findAndCountAll(queryOptions);
 
   res.json({
     success: true,
@@ -42,8 +49,8 @@ const getServices = asyncHandler(async (req, res) => {
     data: services,
     pagination: {
       page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(count / limit)
+      limit: parsedLimit < 1000 ? parsedLimit : count,
+      totalPages: parsedLimit < 1000 ? Math.ceil(count / parsedLimit) : 1
     }
   });
 });
